@@ -9,8 +9,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
-{
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
 
@@ -24,9 +23,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/chat")//connection establishment
-                .setAllowedOrigins("http://localhost:5173")
+        registry.addEndpoint("/chat")
+                .setAllowedOriginPatterns("https://chatapp-1-n6u7.onrender.com", "http://localhost:*")
                 .withSockJS();
     }
-    // /chat endpoint par connection apka establish hoga
 }
