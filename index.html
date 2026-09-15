@@ -501,27 +501,83 @@
 
   async function createRoom() {
     const input = document.getElementById('room-name-input');
-    const roomId = input.value.trim().toLowerCase().replace(/\s+/g,'-');
-    if (!roomId) return;
 
-    if (rooms[roomId]) { selectRoom(roomId); input.value = ''; return; }
+    const roomId = input.value
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '-');
 
-    try {
-      const res = await fetch(`${BASE_URL}/api/rooms`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(roomId)
-      });
-      if (!res.ok && res.status !== 400) throw new Error();
-    } catch(e) { /* demo mode — just add locally */ }
+    // Don't silently do nothing
+    if (!roomId) {
+        showToast('Enter a room name first', 'error');
+        input.focus();
+        return;
+    }
 
-    rooms[roomId] = { messages: [
-      { sender:'system', content:`Room #${roomId} created!`, timeStamp: new Date().toISOString(), isSystem: true }
-    ], icon: getRoomIcon(roomId) };
+    // If room already exists locally, just open it
+    if (rooms[roomId]) {
+        selectRoom(roomId);
+        input.value = '';
+        return;
+    }
+
+    // Add room to UI immediately
+    rooms[roomId] = {
+        messages: [
+            {
+                sender: 'system',
+                content: `Room #${roomId} created!`,
+                timeStamp: new Date().toISOString(),
+                isSystem: true
+            }
+        ],
+        icon: getRoomIcon(roomId)
+    };
+
     renderRoomList();
     selectRoom(roomId);
     input.value = '';
+
     showToast(`Room #${roomId} created ✓`, 'success');
-  }
+
+    // Try creating it on backend in background
+    try {
+        const controller = new AbortController();
+
+        const timeout = setTimeout(() => {
+            controller.abort();
+        }, 10000);
+
+        const res = await fetch(`${BASE_URL}/api/rooms`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(roomId),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (res.ok) {
+            console.log(`Room #${roomId} successfully created on backend`);
+        }
+        else if (res.status === 400) {
+            console.log(`Room #${roomId} already exists on backend`);
+        }
+        else {
+            console.warn(
+                `Backend returned ${res.status} while creating room`
+            );
+        }
+
+    } catch (error) {
+        console.warn(
+            `Backend room creation failed, using local room:`,
+            error
+        );
+    }
+}
 
   function renderRoomList() {
     const list = document.getElementById('room-list');
