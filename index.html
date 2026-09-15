@@ -674,13 +674,12 @@
     t._tid = setTimeout(() => t.className = '', 3000);
   }
 
-  // Enter on modal
+  // Enter on username modal
   document.getElementById('username-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') handleJoin();
   });
-  document.getElementById('room-name-input')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') createRoom();
-  });
+  // (room-name-input Enter is already handled by its inline onkeydown attribute above —
+  //  a duplicate addEventListener here was firing createRoom() twice per Enter press, removed)
 </script>
 </body>
 </html>
